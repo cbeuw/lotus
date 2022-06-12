@@ -18,7 +18,7 @@ def get_top_crates(skip: Set[str] = set()) -> List[str]:
     print(f"Downloading and extracting crates.io DB dump...")
     # with open("db-dump.tar.gz", "rb") as response:
     with urllib.request.urlopen(CRATES_IO_DUMP_URL) as response:
-        archive = tarfile.open(fileobj=response, mode="r:gz")
+        archive = tarfile.open(fileobj=io.BytesIO(response.read()), mode="r:gz")
         crates_info = next(
             filter(
                 lambda info: info.name.endswith("data/crates.csv"), archive.getmembers()
