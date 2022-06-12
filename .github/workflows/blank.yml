@@ -1,0 +1,45 @@
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          apt update
+          apt install -y build-essential
+          apt install -y --no-install-recommends reprotest diffoscope disorderfs faketime sudo locales-all
+      
+      - name: rust-toolchain
+        uses: actions-rs/toolchain@v1.0.6
+        with:
+            toolchain: nightly
+            profile: minimal
+
+      - name: Sanity check
+        run: |
+          cargo new hello
+          cd hello
+          
+          export RUSTUP_HOME=$(rustup show home)
+          export RUSTC=$(which rustc)
+          export CARGO=$(command -v cargo)
+          export CARGO_HOME=$HOME/.cargo
+          export RUSTC_WRAPPER=$GITHUB_WORKSPACE/mean-rustc
+          reprotest --min-cpus=1000 --vary=domain_host.use_sudo=1 --vary="-time" "$GITHUB_WORKSPACE/build.sh;$GITHUB_WORKSPACE/fixup.sh" "target/*"
+
