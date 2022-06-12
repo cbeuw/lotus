@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 
 # Usage: set RUSTC_WRAPPER to be this script and it'll refuse to compile any
-# build script or proc macro
+# build script or proc macro, unless the PACKAGE name is in the exclusions
+
+PROC_MACRO_EXCLUSIONS=(
+)
+
+BUILD_SCRIPT_EXCLUSIONS=(
+  "memchr"
+)
+
+function elementIn () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
 
 for arg in "$@"
 do
@@ -11,17 +25,16 @@ do
     break;
   fi
 
-  # Handle = separated args (not really emitted by Cargo)
-  if [[ $arg == "--crate-type=proc-macro" || $arg == "--crate-name=build_script_"* ]]; then
-    forbidden="$arg";
+  if [[ $prev_arg == "--crate-type" && $arg == "proc-macro" ]] || [[ $arg == "--crate-type=proc-macro" ]]; then
+    if ! elementIn $CARGO_PKG_NAME "${PROC_MACRO_EXCLUSIONS[@]}"; then
+      forbidden="$CARGO_PKG_NAME is not allowed to run proc macros"
+    fi
+  elif [[ $prev_arg == "--crate-name" && $arg == "build_script_"* ]] || [[ $arg == "--crate-name=build_script_"* ]]; then
+    if ! elementIn $CARGO_PKG_NAME "${BUILD_SCRIPT_EXCLUSIONS[@]}"; then
+      forbidden="$CARGO_PKG_NAME is not allowed to run build scripts"
+    fi
   fi
 
-  # Handle space separated args
-  if [[ $prev_arg == "--crate-type" && $arg == "proc-macro" ]]; then
-    forbidden="Build scripts are forbidden: $prev_arg $arg";
-  elif [[ $prev_arg == "--crate-name" && $arg == "build_script_"* ]]; then
-    forbidden="Proc macros are forbidden: $prev_arg $arg";
-  fi
   prev_arg=$arg;
 done
 
