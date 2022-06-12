@@ -26,11 +26,15 @@ do
   fi
 
   if [[ $prev_arg == "--crate-type" && $arg == "proc-macro" ]] || [[ $arg == "--crate-type=proc-macro" ]]; then
-    if ! elementIn $CARGO_PKG_NAME "${PROC_MACRO_EXCLUSIONS[@]}"; then
+    if elementIn $CARGO_PKG_NAME "${PROC_MACRO_EXCLUSIONS[@]}"; then
+      exclusion="$CARGO_PKG_NAME is allowed to run proc macros"
+    else
       forbidden="$CARGO_PKG_NAME is not allowed to run proc macros"
     fi
   elif [[ $prev_arg == "--crate-name" && $arg == "build_script_"* ]] || [[ $arg == "--crate-name=build_script_"* ]]; then
-    if ! elementIn $CARGO_PKG_NAME "${BUILD_SCRIPT_EXCLUSIONS[@]}"; then
+    if elementIn $CARGO_PKG_NAME "${BUILD_SCRIPT_EXCLUSIONS[@]}"; then
+      exclusion="$CARGO_PKG_NAME is allowed to run build scripts"
+    else
       forbidden="$CARGO_PKG_NAME is not allowed to run build scripts"
     fi
   fi
@@ -38,7 +42,9 @@ do
   prev_arg=$arg;
 done
 
-if [[ ! -z "$forbidden" ]]; then
+if [[ "$exclusion" ]]; then
+  echo "$exclusion";
+elif [[ "$forbidden" ]]; then
   echo "$forbidden";
   echo "While compiling package $CARGO_PKG_NAME";
   echo "Full rustc invocation: $@";
