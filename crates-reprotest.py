@@ -2,12 +2,9 @@
 from collections import defaultdict
 import csv
 from enum import Enum
-import io
 import subprocess
 import sys
-import tarfile
 from typing import Set, List
-import urllib.request
 
 TOP_CRATES_COUNT = 20
 CRATES_IO_DUMP_URL = "https://static.crates.io/db-dump.tar.gz"
@@ -16,25 +13,17 @@ CRATES_IO_DUMP_URL = "https://static.crates.io/db-dump.tar.gz"
 def get_top_crates(skip: Set[str] = set()) -> List[str]:
     csv.field_size_limit(sys.maxsize)
     print(f"Downloading and extracting crates.io DB dump...")
-    # with open("db-dump.tar.gz", "rb") as response:
-    with urllib.request.urlopen(CRATES_IO_DUMP_URL) as response:
-        archive = tarfile.open(fileobj=io.BytesIO(response.read()), mode="r:gz")
-        crates_info = next(
-            filter(
-                lambda info: info.name.endswith("data/crates.csv"), archive.getmembers()
-            )
-        )
-        if not crates_info:
-            raise RuntimeError("cannot find data/crates.csv")
-        crates_file = io.TextIOWrapper(archive.extractfile(crates_info))
-        crates = list(csv.DictReader(crates_file))
+    with open("crates.csv", "r") as csvfile:
+        crates = list(csv.DictReader(csvfile))
 
-    # fields: created_at,description,documentation,downloads,homepage,id,max_upload_size,name,readme,repository,updated_at
+    # fields: downloads,name,repository
     print(f"Extracted crates.io dump with {len(crates)} crates")
 
     crates.sort(key=lambda r: int(r["downloads"]), reverse=True)
 
-    not_in_skip = filter(lambda crate: crate["name"] not in skip, crates)
+    not_in_skip = filter(
+        lambda crate: crate["name"] not in skip and crate["repository"], crates
+    )
     top = list(next(not_in_skip) for _ in range(TOP_CRATES_COUNT))
     return top
 

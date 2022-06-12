@@ -37,3 +37,7 @@ Run after `cargo-build.sh` but before reprotest equality checks to remove files 
 some files which don't really need to be reproducible, such as ones
 containing the shell-expanded commmandline used to invoke cargo, but it's easier to remove these files and then ask reprotest to check everything under `target` than
 trying to identify the files that matter.
+
+### [`crates.csv`](https://github.com/cbeuw/lotus/blob/master/crates.csv)
+An abridged version of `data/crates.csv` from [crates.io db dump](https://crates.io/data-access) containing only name, downloads, and repository columns, with subsequent
+empty lines removed
