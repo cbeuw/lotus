@@ -43,9 +43,9 @@ do
 done
 
 if [[ "$exclusion" ]]; then
-  echo "$exclusion";
+  echo "MEAN-RUSTC-ALLOW: $exclusion";
 elif [[ "$forbidden" ]]; then
-  echo "$forbidden";
+  echo "MEAN-RUSTC-FORBID: $forbidden";
   echo "While compiling package $CARGO_PKG_NAME";
   echo "Full rustc invocation: $@";
   exit 1;

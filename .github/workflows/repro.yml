@@ -46,3 +46,13 @@ jobs:
                     "$GITHUB_WORKSPACE/cargo-build.sh && $GITHUB_WORKSPACE/fixup.sh" \
                     "target/*"
 
+      - name: Reprotest crates.io
+        run: |
+          export RUSTUP_HOME=$(rustup show home)
+          export RUSTC=$(which rustc)
+          export CARGO=$(command -v cargo)
+          export CARGO_HOME=$HOME/.cargo
+          export RUSTC_WRAPPER=$GITHUB_WORKSPACE/mean-rustc
+          ./crates-reprotest.py --config-file="$GITHUB_WORKSPACE/.reprotestrc" \
+                                "$GITHUB_WORKSPACE/cargo-build.sh && $GITHUB_WORKSPACE/fixup.sh" \
+                                "target/*"
