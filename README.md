@@ -26,14 +26,14 @@ Allowed build scripts:
 Allowed proc macros:
   - None
 
-### [`build.sh`](https://github.com/cbeuw/lotus/blob/master/build.sh)
+### [`cargo-build.sh`](https://github.com/cbeuw/lotus/blob/master/build.sh)
 A helper script to setup environment variables and then run `cargo build --release`. This is needed primarily because toolchains are installed to the
 local user by rustup, which cannot be found under reprotest's temporary build environments.
 
 This script also sets path remapping flags to strip absolute paths in the outputs
 
 ### [`fixup.sh`](https://github.com/cbeuw/lotus/blob/master/fixup.sh)
-Run after `build.sh` but before reprotest equality checks to remove files under `target` directory that are known to be non-reproducible. `target` contains
+Run after `cargo-build.sh` but before reprotest equality checks to remove files under `target` directory that are known to be non-reproducible. `target` contains
 some files which don't really need to be reproducible, such as ones
 containing the shell-expanded commmandline used to invoke cargo, but it's easier to remove these files and then ask reprotest to check everything under `target` than
 trying to identify the files that matter.
