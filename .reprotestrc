@@ -1,0 +1,6 @@
+[basics]
+min-cpus = 9999
+vary =
+  -time
+  domain_host.use_sudo=1
+
