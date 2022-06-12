@@ -41,5 +41,5 @@ jobs:
           export CARGO=$(command -v cargo)
           export CARGO_HOME=$HOME/.cargo
           export RUSTC_WRAPPER=$GITHUB_WORKSPACE/mean-rustc
-          reprotest --min-cpus=1000 --vary=domain_host.use_sudo=1 --vary="-time" "$GITHUB_WORKSPACE/build.sh;$GITHUB_WORKSPACE/fixup.sh" "target/*"
+          reprotest --min-cpus=1000 --vary=domain_host.use_sudo=1 --vary="-time" "$GITHUB_WORKSPACE/build.sh && $GITHUB_WORKSPACE/fixup.sh" "target/*"
 
