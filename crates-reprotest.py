@@ -130,4 +130,4 @@ if __name__ == "__main__":
     )
     print("\t\t" + "\n".join(statuses[ReproStatus.FORBIDDEN]))
 
-    sys.exit(len(statuses[ReproStatus.NON_REPRODUCTION]) == 0)
+    sys.exit(0 if len(statuses[ReproStatus.NON_REPRODUCTION]) == 0 else 1)
