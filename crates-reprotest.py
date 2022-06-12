@@ -54,11 +54,12 @@ def run_reprotest(name: str, repository: str, reprotest_args: List[str]) -> Repr
         text=True,
     ) as git:
         for line in git.stdout:
-            print(line)
+            print(line, end="")
 
         if git.wait() != 0:
             return ReproStatus.BUILD_FAILED
 
+    output = []
     with subprocess.Popen(
         ["reprotest", "-s", name, *reprotest_args],
         stdout=subprocess.PIPE,
@@ -66,13 +67,16 @@ def run_reprotest(name: str, repository: str, reprotest_args: List[str]) -> Repr
         text=True,
     ) as reprotest:
         for line in reprotest.stdout:
-            print(line)
+            print(line, end="")
+            output.append(line)
 
         if reprotest.wait() == 0:
             return ReproStatus.SUCCESS
-        elif "MEAN-RUSTC-FORBID" in reprotest.stdout:
+        elif any(line.startswith("MEAN-RUSTC-FORBID") for line in output):
             return ReproStatus.FORBIDDEN
-        elif "---" in reprotest.stdout and "+++" in reprotest.stdout:
+        elif any(line.lstrip().startswith("---") for line in output) and any(
+            line.lstrip().startswith("---") for line in output
+        ):
             # we don't really have a better way to detect the failure was from diffoscope
             return ReproStatus.NON_REPRODUCTION
         else:
