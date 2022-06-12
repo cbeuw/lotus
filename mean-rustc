@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# Usage: set RUSTC_WRAPPER to be this script and it'll refuse to compile any
+# build script or proc macro
+
+for arg in "$@"
+do
+  # Do nothing if cargo is gathering info
+  if [[ $arg == "--print"* ]]; then
+    unset forbidden;
+    break;
+  fi
+
+  # Handle = separated args (not really emitted by Cargo)
+  if [[ $arg == "--crate-type=proc-macro" || $arg == "--crate-name=build_script_"* ]]; then
+    forbidden="$arg";
+  fi
+
+  # Handle space separated args
+  if [[ $prev_arg == "--crate-type" && $arg == "proc-macro" ]]; then
+    forbidden="Build scripts are forbidden: $prev_arg $arg";
+  elif [[ $prev_arg == "--crate-name" && $arg == "build_script_"* ]]; then
+    forbidden="Proc macros are forbidden: $prev_arg $arg";
+  fi
+  prev_arg=$arg;
+done
+
+if [[ ! -z "$forbidden" ]]; then
+  echo "$forbidden";
+  echo "While compiling package $CARGO_PKG_NAME";
+  echo "Full rustc invocation: $@";
+  exit 1;
+fi
+
+$@;
