@@ -38,7 +38,7 @@ jobs:
           cd hello
           
           export RUSTUP_HOME=$(rustup show home)
-          export RUSTC=$(which rustc)
+          export RUSTC=$(command -v rustc)
           export CARGO=$(command -v cargo)
           export CARGO_HOME=$HOME/.cargo
           export RUSTC_WRAPPER=$GITHUB_WORKSPACE/mean-rustc
@@ -52,7 +52,7 @@ jobs:
       - name: Reprotest crates.io
         run: |
           export RUSTUP_HOME=$(rustup show home)
-          export RUSTC=$(which rustc)
+          export RUSTC=$(command -v rustc)
           export CARGO=$(command -v cargo)
           export CARGO_HOME=$HOME/.cargo
           export RUSTC_WRAPPER=$GITHUB_WORKSPACE/mean-rustc
