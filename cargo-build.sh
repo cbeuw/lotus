@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-# Usage: export RUSTUP_HOME=$(rustup show home); export RUSTC=$(command -v rustc); export CARGO=$(command -v cargo); export RUSTC_WRAPPER=[absolute path to mean-rustc]; export CARGO_HOME=$HOME/.cargo; build.sh
+# Usage: export RUSTUP_TOOLCHAIN=nightly; export RUSTUP_HOME=$(rustup show home); export RUSTC=$(command -v rustc); export CARGO=$(command -v cargo); export RUSTC_WRAPPER=[absolute path to mean-rustc]; export CARGO_HOME=$HOME/.cargo; build.sh
 
 [[ -z "$RUSTUP_HOME" ]] && { echo "RUSTUP_HOME must be explicilty set"; exit 1; }
 [[ -z "$CARGO" ]] && { echo "CARGO must be explicilty set to the absolute path to the cargo binary"; exit 1; }
 [[ -z "$RUSTC" ]] && { echo "RUSTC must be explicilty set to the absolute path to the rustc binary"; exit 1; }
 [[ -z "$RUSTC_WRAPPER" ]] && { echo "RUSTC_WRAPPER must be explicilty set to the absolute path to mean-rustc"; exit 1; }
+
+[[ -z "$RUSTUP_TOOLCHAIN" ]] && echo "Warning: RUSTUP_TOOLCHAIN is not set, the toolchain may be overriden by rustup-toolchain.toml in crates"
 
 if [[ "$CARGO_HOME" ]] && [ -d "$CARGO_HOME/registry/index" ]; then
   HOST_CARGO_HOME=$CARGO_HOME

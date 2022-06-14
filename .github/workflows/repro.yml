@@ -37,6 +37,7 @@ jobs:
           cargo new hello
           cd hello
           
+          export RUSTUP_TOOLCHAIN=nightly
           export RUSTUP_HOME=$(rustup show home)
           export RUSTC=$(command -v rustc)
           export CARGO=$(command -v cargo)
@@ -51,6 +52,7 @@ jobs:
 
       - name: Reprotest crates.io
         run: |
+          export RUSTUP_TOOLCHAIN=nightly
           export RUSTUP_HOME=$(rustup show home)
           export RUSTC=$(command -v rustc)
           export CARGO=$(command -v cargo)
