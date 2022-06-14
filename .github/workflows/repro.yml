@@ -46,6 +46,9 @@ jobs:
                     "$GITHUB_WORKSPACE/cargo-build.sh && $GITHUB_WORKSPACE/fixup.sh" \
                     "target/*"
 
+      - name: Build cargo index
+        run: cargo install empty-library || exit 0
+
       - name: Reprotest crates.io
         run: |
           export RUSTUP_HOME=$(rustup show home)

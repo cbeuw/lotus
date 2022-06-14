@@ -7,18 +7,18 @@
 [[ -z "$RUSTC" ]] && { echo "RUSTC must be explicilty set to the absolute path to the rustc binary"; exit 1; }
 [[ -z "$RUSTC_WRAPPER" ]] && { echo "RUSTC_WRAPPER must be explicilty set to the absolute path to mean-rustc"; exit 1; }
 
-if [[ "$CARGO_HOME" ]]; then
+if [[ "$CARGO_HOME" ]] && [ -d "$CARGO_HOME/registry/index" ]; then
   HOST_CARGO_HOME=$CARGO_HOME
 else
-  echo "Warning: CARGO_HOME is not explicitly set, this will work but Cargo will attempt to download the crate index on each build"
+  echo "Warning: CARGO_HOME is not explicitly set or the index is empty, this will work but Cargo will attempt to download the crate index on each build"
 fi
 
-# This $HOME is varied by reprotest
-export CARGO_HOME=$HOME/.cargo
+export CARGO_HOME=$(mktemp -d)
 
 # We try to copy the cargo index from the host environment to prevent Cargo from downloading it
 # in the new environment
 if [[ "$HOST_CARGO_HOME" ]] && [ -d "$HOST_CARGO_HOME/registry/index" ]; then
+  echo "copying CARGO HOME"
   mkdir -p "$CARGO_HOME/registry"
   cp -r "$HOST_CARGO_HOME/registry/index" "$CARGO_HOME/registry"
 fi
