@@ -64,7 +64,7 @@ def run_reprotest(name: str, repository: str, reprotest_args: List[str]) -> Repr
         elif any(line.startswith("MEAN-RUSTC-FORBID") for line in output):
             return ReproStatus.FORBIDDEN
         elif any(line.lstrip().startswith("---") for line in output) and any(
-            line.lstrip().startswith("---") for line in output
+            line.lstrip().startswith("+++") for line in output
         ):
             # we don't really have a better way to detect the failure was from diffoscope
             return ReproStatus.NON_REPRODUCTION
@@ -110,13 +110,16 @@ if __name__ == "__main__":
     print("#" * 64)
     print(f"Out of {TOP_CRATES_COUNT} packages:")
     print(f"\t{len(statuses[ReproStatus.SUCCESS])} are reproducible,")
-    print(f"\t{len(statuses[ReproStatus.NON_REPRODUCTION])} are not reproducible,")
+    print(
+        f"\t{len(statuses[ReproStatus.NON_REPRODUCTION])} are not reproducible, these are:"
+    )
+    print("\t\t" + "\n\t\t".join(statuses[ReproStatus.NON_REPRODUCTION]))
     print(f"\t{len(statuses[ReproStatus.BUILD_FAILED])} cannot be built, these are:")
-    print("\t\t" + "\n".join(statuses[ReproStatus.BUILD_FAILED]))
+    print("\t\t" + "\n\t\t".join(statuses[ReproStatus.BUILD_FAILED]))
     print(f"\tand,")
     print(
         f"\t{len(statuses[ReproStatus.FORBIDDEN])} runs forbidden third-party code at compile time, these are:"
     )
-    print("\t\t" + "\n".join(statuses[ReproStatus.FORBIDDEN]))
+    print("\t\t" + "\n\t\t".join(statuses[ReproStatus.FORBIDDEN]))
 
     sys.exit(0 if len(statuses[ReproStatus.NON_REPRODUCTION]) == 0 else 1)
