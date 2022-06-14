@@ -6,7 +6,7 @@ import subprocess
 import sys
 from typing import Set, List
 
-TOP_CRATES_COUNT = 20
+TOP_CRATES_COUNT = 100
 CRATES_IO_DUMP_URL = "https://static.crates.io/db-dump.tar.gz"
 
 
