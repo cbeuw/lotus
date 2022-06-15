@@ -5,8 +5,9 @@ on:
   # Triggers the workflow on push or pull request events but only for the "master" branch
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+
+  schedule:
+    - cron: 10 20 * * *
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -58,6 +59,11 @@ jobs:
           export CARGO=$(command -v cargo)
           export CARGO_HOME=$HOME/.cargo
           export RUSTC_WRAPPER=$GITHUB_WORKSPACE/mean-rustc
+          if [[ $GITHUB_EVENT_NAME == "push" ]]; then
+            export CRATES_COUNT=10
+          else
+            export CRATES_COUNT=100
+          fi
           ./crates-reprotest.py --config-file="$GITHUB_WORKSPACE/.reprotestrc" \
                                 "$GITHUB_WORKSPACE/cargo-build.sh && $GITHUB_WORKSPACE/fixup.sh" \
                                 "target/*"

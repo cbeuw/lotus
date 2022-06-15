@@ -2,15 +2,14 @@
 from collections import defaultdict
 import csv
 from enum import Enum
+import os
 import shutil
 import subprocess
 import sys
 from typing import Set, List
 
-TOP_CRATES_COUNT = 100
 
-
-def get_top_crates(skip: Set[str] = set()) -> List[str]:
+def get_top_crates(count: int, skip: Set[str] = set()) -> List[str]:
     csv.field_size_limit(sys.maxsize)
     print(f"Extracting crates.io DB dump...")
     with open("crates.csv", "r") as csvfile:
@@ -24,7 +23,7 @@ def get_top_crates(skip: Set[str] = set()) -> List[str]:
     not_in_skip = filter(
         lambda crate: crate["name"] not in skip and crate["repository"], crates
     )
-    top = list(next(not_in_skip) for _ in range(TOP_CRATES_COUNT))
+    top = list(next(not_in_skip) for _ in range(count))
     return top
 
 
@@ -88,12 +87,13 @@ RESET = "\033[0m"
 
 if __name__ == "__main__":
     reprotest_args = sys.argv[1:]
+    crates_count = int(os.environ.get("CRATES_COUNT")) or 10
 
     with open("skip-list.txt", "r") as f:
         skip = set(f)
 
-    top = get_top_crates(skip)
-    print(f"Selecting top {TOP_CRATES_COUNT} packages not in skip list")
+    top = get_top_crates(crates_count, skip)
+    print(f"Selecting top {crates_count} packages not in skip list")
 
     statuses = defaultdict(list)
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     print("#" * 64)
     print(
         f"""
-Out of {TOP_CRATES_COUNT} packages:
+Out of {crates_count}
     {len(statuses[ReproStatus.SUCCESS])} are reproducible,
     {len(statuses[ReproStatus.NON_REPRODUCTION])} are not reproducible due to Cargo or Rust, these are:
         {indented_newline.join(statuses[ReproStatus.NON_REPRODUCTION])}
