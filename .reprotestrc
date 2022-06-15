@@ -4,3 +4,6 @@ vary =
   -time
   domain_host.use_sudo=1
 
+[diff]
+diffoscope_arg =
+  --max-text-report-size=8192
