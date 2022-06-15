@@ -2,6 +2,7 @@
 from collections import defaultdict
 import csv
 from enum import Enum
+import shutil
 import subprocess
 import sys
 from typing import Set, List
@@ -64,17 +65,20 @@ def run_reprotest(name: str, repository: str, reprotest_args: List[str]) -> Repr
             output.append(line)
 
         if reprotest.wait() == 0:
-            return ReproStatus.SUCCESS
+            status = ReproStatus.SUCCESS
         elif any(line.lstrip().startswith("---") for line in output) and any(
             line.lstrip().startswith("+++") for line in output
         ):
             # we don't really have a better way to detect the failure was from diffoscope
             if any(line.startswith("MEAN-RUSTC-WARN") for line in output):
-                return ReproStatus.NON_REPRODUCTION_WITH_THIRD_PARTY_BUILD_CODE
+                status = ReproStatus.NON_REPRODUCTION_WITH_THIRD_PARTY_BUILD_CODE
             else:
-                return ReproStatus.NON_REPRODUCTION
+                status = ReproStatus.NON_REPRODUCTION
         else:
-            return ReproStatus.BUILD_FAILED
+            status = ReproStatus.BUILD_FAILED
+
+    shutil.rmtree(name)
+    return status
 
 
 RED = "\033[31m"
