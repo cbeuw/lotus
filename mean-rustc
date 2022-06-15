@@ -1,54 +1,26 @@
 #!/usr/bin/env bash
 
-# Usage: set RUSTC_WRAPPER to be this script and it'll refuse to compile any
-# build script or proc macro, unless the PACKAGE name is in the exclusions
-
-PROC_MACRO_EXCLUSIONS=(
-)
-
-BUILD_SCRIPT_EXCLUSIONS=(
-  "memchr"
-)
-
-function elementIn () {
-  local e match="$1"
-  shift
-  for e; do [[ "$e" == "$match" ]] && return 0; done
-  return 1
-}
+# Usage: set RUSTC_WRAPPER to be this script and it'll warn if build script or proc macro is used
 
 for arg in "$@"
 do
   # Do nothing if cargo is gathering info
   if [[ $arg == "--print"* ]]; then
-    unset forbidden;
+    unset warning;
     break;
   fi
 
   if [[ $prev_arg == "--crate-type" && $arg == "proc-macro" ]] || [[ $arg == "--crate-type=proc-macro" ]]; then
-    if elementIn $CARGO_PKG_NAME "${PROC_MACRO_EXCLUSIONS[@]}"; then
-      exclusion="$CARGO_PKG_NAME is allowed to run proc macros"
-    else
-      forbidden="$CARGO_PKG_NAME is not allowed to run proc macros"
-    fi
+      warning="$CARGO_PKG_NAME is using proc macros"
   elif [[ $prev_arg == "--crate-name" && $arg == "build_script_"* ]] || [[ $arg == "--crate-name=build_script_"* ]]; then
-    if elementIn $CARGO_PKG_NAME "${BUILD_SCRIPT_EXCLUSIONS[@]}"; then
-      exclusion="$CARGO_PKG_NAME is allowed to run build scripts"
-    else
-      forbidden="$CARGO_PKG_NAME is not allowed to run build scripts"
-    fi
+      warning="$CARGO_PKG_NAME is using build scripts"
   fi
 
   prev_arg=$arg;
 done
 
-if [[ "$exclusion" ]]; then
-  echo "MEAN-RUSTC-ALLOW: $exclusion";
-elif [[ "$forbidden" ]]; then
-  echo "MEAN-RUSTC-FORBID: $forbidden";
-  echo "While compiling package $CARGO_PKG_NAME";
-  echo "Full rustc invocation: $@";
-  exit 1;
+if [[ "$warning" ]]; then
+  echo "MEAN-RUSTC-WARN: $warning";
 fi
 
 $@;

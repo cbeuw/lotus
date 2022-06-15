@@ -12,7 +12,7 @@ CRATES_IO_DUMP_URL = "https://static.crates.io/db-dump.tar.gz"
 
 def get_top_crates(skip: Set[str] = set()) -> List[str]:
     csv.field_size_limit(sys.maxsize)
-    print(f"Downloading and extracting crates.io DB dump...")
+    print(f"Extracting crates.io DB dump...")
     with open("crates.csv", "r") as csvfile:
         crates = list(csv.DictReader(csvfile))
 
@@ -29,10 +29,14 @@ def get_top_crates(skip: Set[str] = set()) -> List[str]:
 
 
 class ReproStatus(Enum):
-    SUCCESS = 1  # Successful reproduction
-    NON_REPRODUCTION = 2  # Differences found
-    FORBIDDEN = 3  # Hit a build script or proc macro
-    BUILD_FAILED = 4  # Other build failures
+    # Successful reproduction
+    SUCCESS = 1
+    # Differences found
+    NON_REPRODUCTION = 2
+    # Differences found but the package uses build script or proc macro
+    NON_REPRODUCTION_WITH_THIRD_PARTY_BUILD_CODE = 3
+    # Other build failures
+    BUILD_FAILED = 4
 
 
 def run_reprotest(name: str, repository: str, reprotest_args: List[str]) -> ReproStatus:
@@ -61,13 +65,14 @@ def run_reprotest(name: str, repository: str, reprotest_args: List[str]) -> Repr
 
         if reprotest.wait() == 0:
             return ReproStatus.SUCCESS
-        elif any(line.startswith("MEAN-RUSTC-FORBID") for line in output):
-            return ReproStatus.FORBIDDEN
         elif any(line.lstrip().startswith("---") for line in output) and any(
             line.lstrip().startswith("+++") for line in output
         ):
             # we don't really have a better way to detect the failure was from diffoscope
-            return ReproStatus.NON_REPRODUCTION
+            if any(line.startswith("MEAN-RUSTC-WARN") for line in output):
+                return ReproStatus.NON_REPRODUCTION_WITH_THIRD_PARTY_BUILD_CODE
+            else:
+                return ReproStatus.NON_REPRODUCTION
         else:
             return ReproStatus.BUILD_FAILED
 
@@ -94,32 +99,35 @@ if __name__ == "__main__":
         statuses[status].append(crate["name"])
         if status == ReproStatus.SUCCESS:
             print(
-                f"{GREEN}++++++++++ {crate['name']} REPRODUCTION SUCCESSFUL++++++++++ {RESET}"
+                f"{GREEN}++++++++++ {crate['name']} REPRODUCTION SUCCESSFUL ++++++++++ {RESET}"
             )
         elif status == ReproStatus.NON_REPRODUCTION:
             print(
-                f"{RED}!!!!!!!!!! {crate['name']} BUILD IS NOT REPRODUCIBLE!!!!!!!!!! {RESET}"
+                f"{RED}!!!!!!!!!! {crate['name']} BUILD IS NOT REPRODUCIBLE !!!!!!!!!! {RESET}"
             )
-        elif status == ReproStatus.FORBIDDEN:
+        elif status == ReproStatus.NON_REPRODUCTION_WITH_THIRD_PARTY_BUILD_CODE:
             print(
-                f"{YELLOW}########## {crate['name']} RUNS THIRD-PARTY CODE AT COMPILE TIME########## {RESET}"
+                f"{YELLOW}########## {crate['name']} BUILD IS NOT REPRODUCIBLE but also runs third party code at compile time ########## {RESET}"
             )
         else:
-            print(f"{MAGENTA}?????????? {crate['name']} BUILD FAILED?????????? {RESET}")
+            print(
+                f"{MAGENTA}?????????? {crate['name']} BUILD FAILED ?????????? {RESET}"
+            )
 
+    indented_newline = "\n\t\t"
     print("#" * 64)
-    print(f"Out of {TOP_CRATES_COUNT} packages:")
-    print(f"\t{len(statuses[ReproStatus.SUCCESS])} are reproducible,")
     print(
-        f"\t{len(statuses[ReproStatus.NON_REPRODUCTION])} are not reproducible, these are:"
+        f"""
+Out of {TOP_CRATES_COUNT} packages:
+    {len(statuses[ReproStatus.SUCCESS])} are reproducible,
+    {len(statuses[ReproStatus.NON_REPRODUCTION])} are not reproducible due to Cargo or Rust, these are:
+        {indented_newline.join(statuses[ReproStatus.NON_REPRODUCTION])}
+    {len(statuses[ReproStatus.NON_REPRODUCTION_WITH_THIRD_PARTY_BUILD_CODE])} are not reproducible but could be due to third-party proc macro or build scripts, these are:
+        {indented_newline.join(statuses[ReproStatus.NON_REPRODUCTION_WITH_THIRD_PARTY_BUILD_CODE])}
+    and,
+    {len(statuses[ReproStatus.BUILD_FAILED])} cannot be built, these are:
+        {indented_newline.join(statuses[ReproStatus.BUILD_FAILED])}
+"""
     )
-    print("\t\t" + "\n\t\t".join(statuses[ReproStatus.NON_REPRODUCTION]))
-    print(f"\t{len(statuses[ReproStatus.BUILD_FAILED])} cannot be built, these are:")
-    print("\t\t" + "\n\t\t".join(statuses[ReproStatus.BUILD_FAILED]))
-    print(f"\tand,")
-    print(
-        f"\t{len(statuses[ReproStatus.FORBIDDEN])} runs forbidden third-party code at compile time, these are:"
-    )
-    print("\t\t" + "\n\t\t".join(statuses[ReproStatus.FORBIDDEN]))
 
     sys.exit(0 if len(statuses[ReproStatus.NON_REPRODUCTION]) == 0 else 1)
