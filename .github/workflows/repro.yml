@@ -48,7 +48,7 @@ jobs:
                     "target/*"
 
       - name: Build cargo index
-        run: cargo install empty-library || exit 0
+        run: cargo install empty-library || true
 
       - name: Reprotest crates.io
         run: |
