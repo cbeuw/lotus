@@ -117,7 +117,7 @@ if __name__ == "__main__":
                 f"{MAGENTA}?????????? {crate['name']} BUILD FAILED ?????????? {RESET}"
             )
 
-    indented_newline = "\n\t\t"
+    indented_newline = "\n        "
     print("#" * 64)
     print(
         f"""
