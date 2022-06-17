@@ -1,9 +1,11 @@
 [basics]
 min-cpus = 9999
 vary =
+  -user_group
   -time
   domain_host.use_sudo=1
 
 [diff]
 diffoscope_arg =
-  --max-text-report-size=8192
+  --exclude-command=^readelf.*--hex-dump
+  --exclude-command=^xxd
