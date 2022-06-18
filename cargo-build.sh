@@ -29,6 +29,6 @@ fi
 export CARGO_INCREMENTAL=0
 
 export RUSTFLAGS="-Z remap-cwd-prefix=. --remap-path-prefix $CARGO_HOME=cargo_home"
-$CARGO build --release
+$CARGO build
 
 rm -rf $CARGO_HOME

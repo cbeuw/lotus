@@ -87,7 +87,7 @@ RESET = "\033[0m"
 
 if __name__ == "__main__":
     reprotest_args = sys.argv[1:]
-    crates_count = int(os.environ.get("CRATES_COUNT")) or 10
+    crates_count = int(os.environ.get("CRATES_COUNT") or 10)
 
     with open("skip-list.txt", "r") as f:
         skip = set(f)
